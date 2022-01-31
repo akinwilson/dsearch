@@ -36,7 +36,6 @@ variable "container_image" {
   default = "retriever"
 }
 
-
 variable "aws_alb_target_group_arn" {
   description = "ARN of the alb target group"
 }
