@@ -31,6 +31,7 @@ resource "aws_nat_gateway" "main" {
 }
 
 resource "aws_eip" "nat" {
+  # elastic IP
   count = length(var.private_subnets)
   vpc = true
 

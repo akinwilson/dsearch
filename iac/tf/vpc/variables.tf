@@ -1,5 +1,5 @@
 variable "name" {
-  description = "the name of your stack, e.g. \"demo\""
+  description = "End to end lightning search"
 }
 
 variable "environment" {

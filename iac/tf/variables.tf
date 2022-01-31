@@ -1,5 +1,6 @@
 variable "name" {
-  description = "End to end lightning search"
+  description = "The name of the stack"
+  default = "e2e-search"
 }
 
 variable "environment" {
@@ -18,13 +19,13 @@ variable "aws-region" {
   default     = "eu-west-2"
 }
 
-variable "aws-access-key" {
-  type = string
-}
+# variable "aws-access-key" {
+#   type = string
+# }
 
-variable "aws-secret-key" {
-  type = string
-}
+# variable "aws-secret-key" {
+#   type = string
+# }
 
 variable "application-secrets" {
   description = "A map of secrets that is passed into the application. Formatted like ENV_VAR = VALUE"
@@ -77,6 +78,6 @@ variable "health_check_path" {
   default     = "/health"
 }
 
-variable "tsl_certificate_arn" {
-  description = "The ARN of the certificate that the ALB uses for https"
-}
+# variable "tsl_certificate_arn" {
+#   description = "The ARN of the certificate that the ALB uses for https"
+# }
