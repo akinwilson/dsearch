@@ -1,5 +1,5 @@
 variable "name" {
-  description = "the name of your stack, e.g. \"demo\""
+  description = "End to end lightning search"
 }
 
 variable "environment" {
@@ -9,13 +9,13 @@ variable "environment" {
 
 variable "region" {
   description = "the AWS region in which resources are created, you must set the availability_zones variable as well if you define this value to something other than the default"
-  default     = "eu-central-1"
+  default     = "eu-west-2"
 }
 
 variable "aws-region" {
   type        = string
   description = "AWS region to launch servers."
-  default     = "eu-central-1"
+  default     = "eu-west-2"
 }
 
 variable "aws-access-key" {
@@ -34,7 +34,7 @@ variable "application-secrets" {
 
 variable "availability_zones" {
   description = "a comma-separated list of availability zones, defaults to all AZ of the region, if set to something other than the defaults, both private_subnets and public_subnets have to be defined as well"
-  default     = ["eu-central-1a", "eu-central-1b", "eu-central-1c"]
+  default     = ["eu-west-2a", "eu-west-2b", "eu-west-2c"]
 }
 
 variable "cidr" {
@@ -54,7 +54,7 @@ variable "public_subnets" {
 
 variable "service_desired_count" {
   description = "Number of tasks running in parallel"
-  default     = 2
+  default     = 1
 }
 
 variable "container_port" {
