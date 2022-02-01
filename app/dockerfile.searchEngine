@@ -1,0 +1,14 @@
+FROM getmeili/meilisearch:latest
+# TODO - set up master key/api key and set to production mode
+#######################################################################################
+# Environment setup for Meili variables.
+#######################################################################################
+
+ENV MEILI_ENV="development"  \
+    MEILI_HTTP_ADDR="0.0.0.0:7700" \
+    PATH=/usr/local/bin:$PATH \
+    MEILI_MASTER_KEY="_CBDdMT1hiwGuiTG4mWaXA" \
+    MEILI_DB_PATH="./mnt"
+
+USER root
+

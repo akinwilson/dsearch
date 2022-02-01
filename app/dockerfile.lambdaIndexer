@@ -1,0 +1,108 @@
+################################################################################
+# Stage 1
+# Use below as base image, that will install requirments for runtime. These will
+# then be copied into the the runtime container.
+################################################################################
+FROM public.ecr.aws/lambda/python:3.8 AS base-image
+
+# Function directory and python versions specification
+ARG FUNCTION_DIR="/var/task"
+ARG RUNTIME_VERSION="3.8"
+
+ENV PATH=${FUNCTION_DIR}:/var/lang/bin:$PATH \
+    LD_LIBRARY_PATH=/var/lang/lib:$LD_LIBRARY_PATH:${FUNCTION_DIR} \
+    AWS_EXECUTION_ENV=AWS_Lambda_python${RUNTIME_VERSION} \
+    PKG_CONFIG_PATH=/var/lang/lib/pkgconfig:/usr/lib64/pkgconfig:/usr/share/pkgconfig \
+    PIPX_BIN_DIR=/var/lang/bin \
+    PIPX_HOME=/var/lang/pipx
+
+
+COPY requirements.txt ./
+
+# Using root to avoid permission restrictions
+USER root
+
+# Add these as a separate layer as they get updated frequently
+RUN pip install -U pipx setuptools wheel --no-cache-dir
+
+
+# Install Lambda Runtime Interface Client for Python
+RUN pip install awslambdaric
+
+RUN pipx install --include-deps virtualenv && \
+    pipx install --include-deps pipenv && \
+    pipx install --include-deps poetry==1.1.4 && \
+    pipx install --include-deps awscli==1.* && \
+    pipx install --include-deps aws-lambda-builders==1.2.0 && \
+    pipx install --include-deps aws-sam-cli==1.15.0
+
+RUN echo -e "\n\nBefore dependencies\n\n"
+RUN ls ${FUNCTION_DIR}
+
+RUN mkdir ${FUNCTION_DIR}/dependencies && \
+    chmod +x ${FUNCTION_DIR}/dependencies
+
+RUN echo -e "\n\nAfter dependencies directory creation\n\n"
+RUN ls ${FUNCTION_DIR}
+
+RUN pip install -r ${FUNCTION_DIR}/requirements.txt --target ${FUNCTION_DIR}/dependencies
+RUN echo -e "\n\nAfter INSTALLING dependencies to directory\n\n"
+RUN ls ${FUNCTION_DIR}/dependencies
+
+################################################################################
+# Stage 2
+# Use fresh aws lambda python build image and copy installed items from build
+# image to runtime image
+################################################################################
+FROM public.ecr.aws/lambda/python:3.8 AS lambda-image
+
+USER root
+# Set working directory to function root directory
+ARG FUNCTION_DIR="/var/task"
+WORKDIR ${FUNCTION_DIR}
+
+COPY --from=base-image ${FUNCTION_DIR} ${FUNCTION_DIR}
+COPY --from=base-image /var/runtime /var/runtime
+COPY --from=base-image /var/lang /var/lang
+COPY --from=base-image ${FUNCTION_DIR}/dependencies /var/lang/lib/python3.8/site-packages
+COPY --from=base-image /var/rapid /var/rapid
+
+RUN echo -e "\n\nList of directory content of **/var/lang/lib/python3.8/site-packages** of runtime container\n\n"
+RUN ls /var/lang/lib/python3.8/site-packages
+
+#Perform a quick update on your instance:
+RUN yum update -y
+RUN yum install git -y
+
+ARG ENVIRONMENT="development" \
+    HTTP_ADDR="0.0.0.0:7700" \
+    MASTER_KEY="_CBDdMT1hiwGuiTG4mWaXA" \
+
+#######################################################################################
+# Environment setup for Meili variables.
+#######################################################################################
+
+ENV MEILI_ENV=$ENVIRONMENT \
+    MEILI_HTTP_ADDR=$HTTP_ADDR \
+    MEILI_NO_ANALYTICS="false" \
+    PATH=/usr/local/bin:$PATH \
+    MEILI_MASTER_KEY=$MASTER_KEY 
+
+# Copy source directory into container; indexing logic
+RUN mkdir configurations
+
+#################################################
+# Only for testing purposes of EFS mounting point.
+RUN mkdir mnt && cd mnt && mkdir efs
+#################################################
+
+COPY src/ ./
+COPY configurations/ ./configurations
+
+RUN curl -L https://install.meilisearch.com | sh
+RUN chmod +x ./meilisearch
+RUN mv ./meilisearch /usr/bin/meilisearch
+
+EXPOSE 7700/tcp
+CMD ["indexer.handler"]
+
