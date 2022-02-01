@@ -6,18 +6,21 @@ variable "environment" {
   description = "The environment to which the stack is deployed"
 }
 
-variable "subnets" {
-    description = "Ids of lambda subnets"
+variable "indexer_image_uri" {
+  description = "indexer image uri (from ECR) for lambda to pull image from"
 }
 
-variable "sg" {
-    description = "secruity group for lambda function. Needs to be able to communicate with both efs (w) and ECR"
+variable "subnets" {
+    description = "Ids of lambda subnets"
 }
 
 variable "efs_mount_path" {
   description = "The path the lambda function will mount the EFS to"
 }
 
+variable "master_key" {
+  description= "Master key for secure communcation for indexer and retriever functions"
+}
 
 variable "access_point_lambda_arn" {
   description = "The arn of the access point for the lambda"

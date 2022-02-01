@@ -83,6 +83,9 @@ resource "aws_security_group" "efs" {
 }
 
 
+
+
+
 output efs {
   value = aws_security_group.efs.id 
 }

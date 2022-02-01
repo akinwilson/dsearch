@@ -1,5 +1,14 @@
-resource "aws_ecr_repository" "main" {
-  name                 = "${var.name}-${var.environment}"
+resource "aws_ecr_repository" "indexer_main" {
+  name                 = "${var.name}-indexer-${var.environment}"
+  image_tag_mutability = "MUTABLE"
+
+  image_scanning_configuration {
+    scan_on_push = false
+  }
+}
+
+resource "aws_ecr_repository" "retriever_main" {
+  name                 = "${var.name}-retriever-${var.environment}"
   image_tag_mutability = "MUTABLE"
 
   image_scanning_configuration {
@@ -8,7 +17,7 @@ resource "aws_ecr_repository" "main" {
 }
 
 resource "aws_ecr_lifecycle_policy" "main" {
-  repository = aws_ecr_repository.main.name
+  repository = aws_ecr_repository.retriever_main.name
 
   policy = jsonencode({
     rules = [{
@@ -26,6 +35,34 @@ resource "aws_ecr_lifecycle_policy" "main" {
   })
 }
 
-output "aws_ecr_repository_url" {
-    value = aws_ecr_repository.main.repository_url
+
+resource "aws_ecr_lifecycle_policy" "main" {
+  repository = aws_ecr_repository.indexer_main.name
+
+  policy = jsonencode({
+    rules = [{
+      rulePriority = 1
+      description  = "keep last 1 images"
+      action       = {
+        type = "expire"
+      }
+      selection     = {
+        tagStatus   = "any"
+        countType   = "imageCountMoreThan"
+        countNumber = 10
+      }
+    }]
+  })
 }
+
+
+output "aws_ecr_retriever_repo_url" {
+    value = aws_ecr_repository.retriever_main.repository_url
+}
+
+output "aws_ecr_indexer_repo_url" {
+  value = aws_ecr_repository.indexer_main.repository_url  
+}
+
+  # aws_ecr_retriever_repo_url = module.ecr.aws_ecr_retriever_repo_url
+  # aws_ecr_indexer_repo_url = module.ecr.aws_ecr_indexer_repo_url

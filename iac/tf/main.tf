@@ -104,9 +104,25 @@ module "ecs" {
     value = var.container_port }
   ]
   container_secrets      = module.secrets.secrets_map
-  aws_ecr_repository_url = module.ecr.aws_ecr_repository_url
+  aws_ecr_retriever_repo_url = module.ecr.aws_ecr_retriever_repo_url
+
   container_secrets_arns = module.secrets.application_secrets_arn
 }
+
+
+module "lambda" {
+  source = "./lambda"
+  name = var.name
+  environment = var.environment
+  indexer_image_uri = module.ecr.aws_ecr_indexer_repo_url
+  container_port = var.container_port
+  subnets = var.private_subnets
+  efs_mount_path = "/mnt/efs"
+  access_point_lambda_arn = module.efs.access_point_lambda_arn
+  dependency_on_mnt = module.efs.depdency_on_mnt
+  sg_lambda_efs = module.security_groups.efs
+}
+
 
 data "aws_iam_policy_document" "iam_policy_document" {
     statement {

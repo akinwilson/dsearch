@@ -1,8 +1,7 @@
 variable "name" {
   description = "Name of stack module"
-  
+ 
 }
-
 variable "environment" {
   description = "the name of your environment, e.g. \"prod\""
 }
@@ -33,7 +32,6 @@ variable "container_memory" {
 
 variable "container_image" {
   description = "name of container within repo"
-  default = "retriever"
 }
 
 variable "aws_alb_target_group_arn" {

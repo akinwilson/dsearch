@@ -47,28 +47,21 @@ EOF
 
 resource "aws_lambda_function" "lambda_indexer" {
     image_uri = var.indexer_image_uri
-
     function_name = "lambda_indexer_function"
     role          = aws_iam_role.iam_for_lambda.arn
     handler       = "indexer.handler"
-
-  # The filebase64sha256() function is available in Terraform 0.11.12 and later
-  # For Terraform 0.11.11 and earlier, use the base64sha256() function and the file() function:
-  # source_code_hash = "${base64sha256(file("lambda_function_payload.zip"))}"
-#   source_code_hash = filebase64sha256("lambda_function_payload.zip")
-
-    runtime = "python3.8"
-
-  environment {
-    variables = {
-      foo = "bar"
-    }
+    runtime = "python3.8"    
+    environment {
+        variables = {
+            ENVIRONMENT = var.environment 
+            HTTP_ADDR="0.0.0.0:${var.container_port}"
+            MASTER_KEY = var.master_key 
+        }
   }
 }
 
-
-
 # A lambda function connected to an EFS file system
+
 resource "aws_lambda_function" "main" {
   # ... other configuration ...
 
@@ -76,7 +69,7 @@ resource "aws_lambda_function" "main" {
     # EFS file system access point ARN
     arn = var.access_point_lambda_arn
     # Local mount path inside the lambda function. Must start with '/mnt/'.
-    local_mount_path = "/mnt/efs"
+    local_mount_path = var.efs_mount_path
   }
 
   vpc_config {
