@@ -77,29 +77,31 @@ RUN yum install git -y
 ARG ENVIRONMENT="development" \
     HTTP_ADDR="0.0.0.0:7700" \
     MASTER_KEY="_CBDdMT1hiwGuiTG4mWaXA" \
+    FUNCTION_DIR=$FUNCTION_DIR
 
 #######################################################################################
 # Environment setup for Meili variables.
 #######################################################################################
-
-ENV MEILI_ENV=$ENVIRONMENT \
+ENV PATH=/usr/local/bin:$PATH \
+    MEILI_ENV=$ENVIRONMENT \
     MEILI_HTTP_ADDR=$HTTP_ADDR \
     MEILI_NO_ANALYTICS="false" \
-    PATH=/usr/local/bin:$PATH \
-    MEILI_MASTER_KEY=$MASTER_KEY 
+    MEILI_MASTER_KEY=$MASTER_KEY \
+    MEILI_DB_PATH="./mnt"
 
 # Copy source directory into container; indexing logic
-RUN mkdir configurations
-
+RUN mkdir configurations data
 #################################################
 # Only for testing purposes of EFS mounting point.
-RUN mkdir mnt && cd mnt && mkdir efs
+RUN mkdir mnt
 #################################################
 
-COPY src/ ./
+COPY data/ ./data
+COPY indexer.py ./
 COPY configurations/ ./configurations
-
-RUN curl -L https://install.meilisearch.com | sh
+# RUN python -m pip install open3d==0.13.0
+# RUN curl -L https://install.meilisearch.com | sh
+RUN curl -L https://github.com/meilisearch/meilisearch/releases/download/v0.22.0/meilisearch-linux-amd64 -o meilisearch
 RUN chmod +x ./meilisearch
 RUN mv ./meilisearch /usr/bin/meilisearch
 
