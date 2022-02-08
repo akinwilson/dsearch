@@ -87,13 +87,13 @@ ENV PATH=/usr/local/bin:$PATH \
     MEILI_HTTP_ADDR=$HTTP_ADDR \
     MEILI_NO_ANALYTICS="false" \
     MEILI_MASTER_KEY=$MASTER_KEY \
-    MEILI_DB_PATH="./mnt"
+    MEILI_DB_PATH="./mnt/efs"
 
 # Copy source directory into container; indexing logic
 RUN mkdir configurations data
 #################################################
 # Only for testing purposes of EFS mounting point.
-RUN mkdir mnt
+RUN mkdir mnt && cd mnt && mkdir efs && cd ..
 #################################################
 
 COPY data/ ./data
