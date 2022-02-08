@@ -99,8 +99,7 @@ RUN mkdir mnt && cd mnt && mkdir efs && cd ..
 COPY data/ ./data
 COPY indexer.py ./
 COPY configurations/ ./configurations
-# RUN python -m pip install open3d==0.13.0
-# RUN curl -L https://install.meilisearch.com | sh
+
 RUN curl -L https://github.com/meilisearch/meilisearch/releases/download/v0.22.0/meilisearch-linux-amd64 -o meilisearch
 RUN chmod +x ./meilisearch
 RUN mv ./meilisearch /usr/bin/meilisearch
