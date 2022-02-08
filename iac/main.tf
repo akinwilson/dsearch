@@ -74,16 +74,16 @@ module "efs" {
   environment = var.environment
   vpc_id = module.vpc.id
   subnets = module.vpc.private_subnets
-  sg = module.security_groups.efs
+  sg_efs = module.security_groups.efs
 }
 
 
-module "secrets" {
-  source              = "./secrets"
-  name                = var.name
-  environment         = var.environment
-  application-secrets = var.application-secrets
-}
+# module "secrets" {
+#   source              = "./secrets"
+#   name                = var.name
+#   environment         = var.environment
+#   application-secrets = var.application-secrets
+# }
 
 module "ecs" {
   source                      = "./ecs"
@@ -103,10 +103,11 @@ module "ecs" {
     { name = "PORT",
     value = var.container_port }
   ]
-  container_secrets      = module.secrets.secrets_map
+  # container_secrets      = module.secrets.secrets_map
   aws_ecr_retriever_repo_url = module.ecr.aws_ecr_retriever_repo_url
-
-  container_secrets_arns = module.secrets.application_secrets_arn
+  # container_secrets_arns = module.secrets.application_secrets_arn
+  fs_id = module.efs.fs_id
+  efs_access_point_id = module.efs.access_point_id
 }
 
 
@@ -114,8 +115,8 @@ module "lambda" {
   source = "./lambda"
   name = var.name
   environment = var.environment
-  indexer_image_uri = module.ecr.aws_ecr_indexer_repo_url
-  container_port = var.container_port
+  # indexer_image_repo = module.ecr.aws_ecr_indexer_repo_url
+  # container_port = var.container_port
   subnets = var.private_subnets
   efs_mount_path = "/mnt/efs"
   access_point_lambda_arn = module.efs.access_point_lambda_arn

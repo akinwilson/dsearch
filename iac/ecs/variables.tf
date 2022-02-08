@@ -30,8 +30,9 @@ variable "container_memory" {
   description = "The amount (in MiB) of memory used by the task"
 }
 
-variable "container_image" {
+variable "retriever_container_repo" {
   description = "name of container within repo"
+  default= "437996125465.dkr.ecr.eu-west-2.amazonaws.com"
 }
 
 variable "aws_alb_target_group_arn" {
@@ -47,16 +48,28 @@ variable "container_environment" {
   type        = list
 }
 
-variable "container_secrets" {
-  description = "The container secret environmnent variables"
-  type        = list
-}
+# variable "container_secrets" {
+#   description = "The container secret environmnent variables"
+#   type        = list
+# }
 
-variable "container_secrets_arns" {
-  description = "ARN for secrets"
-}
+# variable "container_secrets_arns" {
+#   description = "ARN for secrets"
+# }
 
-variable "aws_ecr_repository_url" {
+variable "aws_ecr_retriever_repo_url" {
   description = "URL of the repostory container the image to be served over ECS"
+  default="437996125465.dkr.ecr.eu-west-2.amazonaws.com/e2e-search-retriever-prod:latest"
+}
+
+
+
+variable "fs_id" {
+  description = "File system ID to use as mounting point when serving container"
+}
+
+
+variable "efs_access_point_id" {
+  description = "File system ID to use as mounting point when serving container"
 }
 

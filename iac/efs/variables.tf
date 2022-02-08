@@ -15,6 +15,6 @@ variable "vpc_id" {
   description = "VPC ID"
 }
 
-variable "sg" {
+variable "sg_efs" {
   description = "Secruity group of efs"
 }

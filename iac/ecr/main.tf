@@ -16,7 +16,7 @@ resource "aws_ecr_repository" "retriever_main" {
   }
 }
 
-resource "aws_ecr_lifecycle_policy" "main" {
+resource "aws_ecr_lifecycle_policy" "retriever_main" {
   repository = aws_ecr_repository.retriever_main.name
 
   policy = jsonencode({
@@ -36,7 +36,7 @@ resource "aws_ecr_lifecycle_policy" "main" {
 }
 
 
-resource "aws_ecr_lifecycle_policy" "main" {
+resource "aws_ecr_lifecycle_policy" "indexer_main" {
   repository = aws_ecr_repository.indexer_main.name
 
   policy = jsonencode({
@@ -64,5 +64,3 @@ output "aws_ecr_indexer_repo_url" {
   value = aws_ecr_repository.indexer_main.repository_url  
 }
 
-  # aws_ecr_retriever_repo_url = module.ecr.aws_ecr_retriever_repo_url
-  # aws_ecr_indexer_repo_url = module.ecr.aws_ecr_indexer_repo_url

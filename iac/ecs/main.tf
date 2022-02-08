@@ -68,26 +68,26 @@ resource "aws_iam_policy" "dynamodb" {
 EOF
 }
 
-resource "aws_iam_policy" "secrets" {
-  name        = "${var.name}-task-policy-secrets"
-  description = "Policy that allows access to the secrets we created"
+# resource "aws_iam_policy" "secrets" {
+#   name        = "${var.name}-task-policy-secrets"
+#   description = "Policy that allows access to the secrets we created"
 
-  policy = <<EOF
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Sid": "AccessSecrets",
-            "Effect": "Allow",
-            "Action": [
-              "secretsmanager:GetSecretValue"
-            ],
-            "Resource": ${jsonencode(var.container_secrets_arns)}
-        }
-    ]
-}
-EOF
-}
+#   policy = <<EOF
+# {
+#     "Version": "2012-10-17",
+#     "Statement": [
+#         {
+#             "Sid": "AccessSecrets",
+#             "Effect": "Allow",
+#             "Action": [
+#               "secretsmanager:GetSecretValue"
+#             ],
+#             "Resource": ${jsonencode(var.container_secrets_arns)}
+#         }
+#     ]
+# }
+# EOF
+# }
 
 
 resource "aws_iam_role_policy_attachment" "ecs-task-execution-role-policy-attachment" {
@@ -100,13 +100,13 @@ resource "aws_iam_role_policy_attachment" "ecs-task-role-policy-attachment" {
   policy_arn = aws_iam_policy.dynamodb.arn
 }
 
-resource "aws_iam_role_policy_attachment" "ecs-task-role-policy-attachment-for-secrets" {
-  role       = aws_iam_role.ecs_task_execution_role.name
-  policy_arn = aws_iam_policy.secrets.arn
-}
+# resource "aws_iam_role_policy_attachment" "ecs-task-role-policy-attachment-for-secrets" {
+#   role       = aws_iam_role.ecs_task_execution_role.name
+#   policy_arn = aws_iam_policy.secrets.arn
+# }
 
 resource "aws_cloudwatch_log_group" "main" {
-  name = "/ecs/${var.name}-task-${var.environment}"
+  name = "${var.name}-task-${var.environment}"
 
   tags = {
     Name        = "${var.name}-task-${var.environment}"
@@ -123,8 +123,8 @@ resource "aws_ecs_task_definition" "main" {
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
   task_role_arn            = aws_iam_role.ecs_task_role.arn
   container_definitions = jsonencode([{
-    name        = "${var.name}-search-engine-container-${var.environment}"
-    image       = "${var.container_image}:latest"
+    name        = "${var.name}-retriever-${var.environment}"
+    image       = "${var.retriever_container_repo}/${var.name}-retriever-${var.environment}:latest" # 437996125465.dkr.ecr.eu-west-2.amazonaws.com/e2e-search-retriever-prod:latest
     essential   = true
     environment = var.container_environment
     portMappings = [{
@@ -140,9 +140,20 @@ resource "aws_ecs_task_definition" "main" {
         awslogs-region        = var.region
       }
     }
-    secrets = var.container_secrets
   }])
-
+  volume {
+    name = "service-storage"
+    efs_volume_configuration {
+      file_system_id          = var.fs_id  # aws_efs_file_system.fs.id
+      root_directory          =  "/mnt/efs"
+      transit_encryption      = "ENABLED"
+      transit_encryption_port = 2999
+      authorization_config {
+        access_point_id = var.efs_access_point_id # aws_efs_access_point.test.id
+        iam             = "ENABLED"
+      }
+    }
+  }
   tags = {
     Name        = "${var.name}-task-${var.environment}"
     Environment = var.environment
