@@ -87,7 +87,7 @@ ENV PATH=/usr/local/bin:$PATH \
     MEILI_HTTP_ADDR=$HTTP_ADDR \
     MEILI_NO_ANALYTICS="false" \
     MEILI_MASTER_KEY=$MASTER_KEY \
-    MEILI_DB_PATH="./mnt/efs"
+    MEILI_DB_PATH="/mnt/efs"
 
 # Copy source directory into container; indexing logic
 RUN mkdir configurations data
