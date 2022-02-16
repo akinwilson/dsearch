@@ -93,10 +93,12 @@ ENV PATH=/usr/local/bin:$PATH \
 RUN mkdir configurations data
 #################################################
 # Only for testing purposes of EFS mounting point.
-RUN mkdir mnt && cd mnt && mkdir efs && cd ..
+# RUN mkdir mnt && cd mnt && mkdir efs && cd ..
 #################################################
 
-COPY data/ ./data
+COPY data/qa-info.p ./data/qa-info.p
+COPY data/user-info.p ./data/user-info.p
+
 COPY indexer.py ./
 COPY configurations/ ./configurations
 
