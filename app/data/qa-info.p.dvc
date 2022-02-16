@@ -1,0 +1,5 @@
+outs:
+- md5: 2d01bf1d0bcac103e092b1a35b6194f7
+  size: 14649920
+  isexec: true
+  path: qa-info.p
