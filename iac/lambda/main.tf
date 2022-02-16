@@ -1,6 +1,7 @@
-resource "aws_iam_role" "iam_for_lambda" {
-  name = "iam_for_lambda"
-  assume_role_policy = <<EOF
+
+resource "aws_iam_role" "lambda_role" {
+  name = "${var.name}-lambda-role"
+   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -17,6 +18,32 @@ resource "aws_iam_role" "iam_for_lambda" {
 EOF
 }
 
+resource "aws_iam_policy" "efs_attachment_policy" {
+  name        = "${var.name}-lambda-efs"
+  description = "Policy that allows access EFS, mounting reading and writing"
+  policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+              "elasticfilesystem:ClientMount",
+              "elasticfilesystem:ClientWrite",
+              "elasticfilesystem:ClientRootAccess"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "lambda-execution-role-policy-attachment" {
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = aws_iam_policy.efs_attachment_policy.arn
+}
+
 
 # A lambda function connected to an EFS file system
 resource "aws_lambda_function" "main" {
@@ -24,9 +51,11 @@ resource "aws_lambda_function" "main" {
     image_uri       = "${var.indexer_container_repo}/${var.name}-indexer-${var.environment}:latest" # 437996125465.dkr.ecr.eu-west-2.amazonaws.com/e2e-search-retriever-prod:latest
     # image_uri = var.indexer_image_uri # 437996125465.dkr.ecr.eu-west-2.amazonaws.com/e2e-search-indexer-prod:latest
     function_name = "lambda_indexer_function"
-    role          = aws_iam_role.iam_for_lambda.arn
-    handler       = "indexer.handler"
+    role = aws_iam_role.lambda_role.arn
+    handler = "indexer.handler"
     runtime = "python3.8"
+    timeout = 120
+    
     environment {
         variables = {
             ENVIRONMENT = var.environment 

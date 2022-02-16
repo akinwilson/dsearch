@@ -23,10 +23,10 @@ resource "aws_ecr_lifecycle_policy" "retriever_main" {
     rules = [{
       rulePriority = 1
       description  = "keep last 1 images"
-      action       = {
+      action = {
         type = "expire"
       }
-      selection     = {
+      selection = {
         tagStatus   = "any"
         countType   = "imageCountMoreThan"
         countNumber = 10
@@ -43,10 +43,10 @@ resource "aws_ecr_lifecycle_policy" "indexer_main" {
     rules = [{
       rulePriority = 1
       description  = "keep last 1 images"
-      action       = {
+      action = {
         type = "expire"
       }
-      selection     = {
+      selection = {
         tagStatus   = "any"
         countType   = "imageCountMoreThan"
         countNumber = 10
@@ -57,10 +57,10 @@ resource "aws_ecr_lifecycle_policy" "indexer_main" {
 
 
 output "aws_ecr_retriever_repo_url" {
-    value = aws_ecr_repository.retriever_main.repository_url
+  value = aws_ecr_repository.retriever_main.repository_url
 }
 
 output "aws_ecr_indexer_repo_url" {
-  value = aws_ecr_repository.indexer_main.repository_url  
+  value = aws_ecr_repository.indexer_main.repository_url
 }
 

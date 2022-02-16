@@ -59,22 +59,37 @@ resource "aws_security_group" "ecs_tasks" {
 }
 
 
+resource "aws_security_group_rule" "lambda-efs-sg" {
+    # name   = "${var.name}-lambda-efs-${var.environment}"
+    # vpc_id = var.vpc_id
+    security_group_id = aws_security_group.efs.id
+    source_security_group_id = aws_security_group.lambda.id
+    type = "egress"
+    protocol         = "tcp"
+    from_port        = 0
+    to_port          = -1
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+    }
+
+
 resource "aws_security_group" "efs" {
   
   name   = "${var.name}-sg-efs-${var.environment}"
   vpc_id = var.vpc_id
-  ingress {
-      security_groups = [aws_security_group.ecs_tasks.id]
-      protocol         = "tcp"
-      from_port        = var.lambda_port
-      to_port          = var.lambda_port
-      cidr_blocks      = ["0.0.0.0/0"]
-      ipv6_cidr_blocks = ["::/0"]
-    }
+  # ingress {
+  #     security_groups = [aws_security_group.lambda.id]
+  #     protocol         = "tcp"
+  #     from_port        = 0
+  #     to_port          = -1
+  #     cidr_blocks      = ["0.0.0.0/0"]
+  #     ipv6_cidr_blocks = ["::/0"]
+  #   }
   egress {
+      security_groups = [aws_security_group.ecs_tasks.id]
       protocol         = "-1"
       from_port        = 0
-      to_port          = 0
+      to_port          = -1
       cidr_blocks      = ["0.0.0.0/0"]
       ipv6_cidr_blocks = ["::/0"]
     }
@@ -89,8 +104,8 @@ resource "aws_security_group" "lambda" {
     vpc_id = var.vpc_id
     ingress {
       protocol         = "tcp"
-      from_port        = var.lambda_port
-      to_port          = var.lambda_port
+      from_port        = 0
+      to_port          = -1
       cidr_blocks      = ["0.0.0.0/0"]
       ipv6_cidr_blocks = ["::/0"]
     }
@@ -98,7 +113,7 @@ resource "aws_security_group" "lambda" {
       security_groups = [aws_security_group.efs.id] 
       protocol         = "-1"
       from_port        = 0
-      to_port          = 0
+      to_port          = -1
       cidr_blocks      = ["0.0.0.0/0"]
       ipv6_cidr_blocks = ["::/0"]
     }

@@ -1,6 +1,6 @@
 variable "name" {
   description = "The name of the stack"
-  default = "e2e-search"
+  default     = "e2e-search"
 }
 
 variable "environment" {

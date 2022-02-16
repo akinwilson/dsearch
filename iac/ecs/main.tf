@@ -38,10 +38,9 @@ resource "aws_iam_role" "ecs_task_role" {
 EOF
 }
 
-resource "aws_iam_policy" "dynamodb" {
-  name        = "${var.name}-task-policy-dynamodb"
-  description = "Policy that allows access to DynamoDB"
-
+resource "aws_iam_policy" "efs" {
+  name        = "${var.name}-ecs-efs"
+  description = "Policy that allows access EFS, mounting reading and writing"
   policy = <<EOF
 {
     "Version": "2012-10-17",
@@ -49,17 +48,9 @@ resource "aws_iam_policy" "dynamodb" {
         {
             "Effect": "Allow",
             "Action": [
-                "dynamodb:CreateTable",
-                "dynamodb:UpdateTimeToLive",
-                "dynamodb:PutItem",
-                "dynamodb:DescribeTable",
-                "dynamodb:ListTables",
-                "dynamodb:DeleteItem",
-                "dynamodb:GetItem",
-                "dynamodb:Scan",
-                "dynamodb:Query",
-                "dynamodb:UpdateItem",
-                "dynamodb:UpdateTable"
+              "elasticfilesystem:ClientMount",
+              "elasticfilesystem:ClientWrite",
+              "elasticfilesystem:ClientRootAccess"
             ],
             "Resource": "*"
         }
@@ -68,28 +59,6 @@ resource "aws_iam_policy" "dynamodb" {
 EOF
 }
 
-# resource "aws_iam_policy" "secrets" {
-#   name        = "${var.name}-task-policy-secrets"
-#   description = "Policy that allows access to the secrets we created"
-
-#   policy = <<EOF
-# {
-#     "Version": "2012-10-17",
-#     "Statement": [
-#         {
-#             "Sid": "AccessSecrets",
-#             "Effect": "Allow",
-#             "Action": [
-#               "secretsmanager:GetSecretValue"
-#             ],
-#             "Resource": ${jsonencode(var.container_secrets_arns)}
-#         }
-#     ]
-# }
-# EOF
-# }
-
-
 resource "aws_iam_role_policy_attachment" "ecs-task-execution-role-policy-attachment" {
   role       = aws_iam_role.ecs_task_execution_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
@@ -97,13 +66,9 @@ resource "aws_iam_role_policy_attachment" "ecs-task-execution-role-policy-attach
 
 resource "aws_iam_role_policy_attachment" "ecs-task-role-policy-attachment" {
   role       = aws_iam_role.ecs_task_role.name
-  policy_arn = aws_iam_policy.dynamodb.arn
+  policy_arn = aws_iam_policy.efs.arn
 }
 
-# resource "aws_iam_role_policy_attachment" "ecs-task-role-policy-attachment-for-secrets" {
-#   role       = aws_iam_role.ecs_task_execution_role.name
-#   policy_arn = aws_iam_policy.secrets.arn
-# }
 
 resource "aws_cloudwatch_log_group" "main" {
   name = "${var.name}-task-${var.environment}"
@@ -145,9 +110,9 @@ resource "aws_ecs_task_definition" "main" {
     name = "service-storage"
     efs_volume_configuration {
       file_system_id          = var.fs_id  # aws_efs_file_system.fs.id
-      root_directory          =  "/mnt/efs"
       transit_encryption      = "ENABLED"
-      transit_encryption_port = 2999
+      root_directory          = "/mnt/efs"
+
       authorization_config {
         access_point_id = var.efs_access_point_id # aws_efs_access_point.test.id
         iam             = "ENABLED"
@@ -219,7 +184,6 @@ resource "aws_appautoscaling_policy" "ecs_policy_memory" {
     predefined_metric_specification {
       predefined_metric_type = "ECSServiceAverageMemoryUtilization"
     }
-
     target_value       = 80
     scale_in_cooldown  = 300
     scale_out_cooldown = 300
@@ -232,12 +196,10 @@ resource "aws_appautoscaling_policy" "ecs_policy_cpu" {
   resource_id        = aws_appautoscaling_target.ecs_target.resource_id
   scalable_dimension = aws_appautoscaling_target.ecs_target.scalable_dimension
   service_namespace  = aws_appautoscaling_target.ecs_target.service_namespace
-
   target_tracking_scaling_policy_configuration {
     predefined_metric_specification {
       predefined_metric_type = "ECSServiceAverageCPUUtilization"
     }
-
     target_value       = 60
     scale_in_cooldown  = 300
     scale_out_cooldown = 300
