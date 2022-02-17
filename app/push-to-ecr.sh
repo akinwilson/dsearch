@@ -4,19 +4,13 @@ set -e
 SERVICE=$1
 ENV=$2
 COMPONENT=$3
-REPO="${SERVICE}-${COMPONENT}-${ENV}"
+IMAGE=$4
 
-IMAGE=""
+REPO="${SERVICE}-${COMPONENT}-${ENV}"
 ACCOUNT="437996125465"
 REGION="eu-west-2"
 
-if [$COMPONENT == "indexer"]; then
-    IMAGE="dockerfile.lambdaIndexer"
-else
-    IMAGE="dockerfile.searchEngine"
-fi
-# ...terraform commands    
-docker build -f ${IMAGE} -t ${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com/${REPO} .
+docker build -f ../app/${IMAGE} -t ${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com/${REPO} .
 aws ecr get-login-password \
     --region ${REGION} \
 | docker login \
