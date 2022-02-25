@@ -2,17 +2,17 @@
 resource "aws_iam_role" "lambda_role" {
   name = "${var.name}-lambda-role"
   assume_role_policy = jsonencode({
-      Version = "2012-10-17"
-      Statement = [
-        {
-          Action = "sts:AssumeRole"
-          Effect = "Allow"
-          Sid = "AllowLambdaExecution"
-          Principal = {
-            Service = "lambda.amazonaws.com"
-          }
-        },
-      ]
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = "AllowLambdaExecution"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+      },
+    ]
   })
 }
 
@@ -77,7 +77,7 @@ resource "aws_lambda_function" "main" {
     }
   }
   file_system_config {
-    arn = var.access_point
+    arn              = var.access_point
     local_mount_path = "/mnt/efs"
   }
 
@@ -91,21 +91,21 @@ resource "aws_lambda_function" "main" {
 
 
 resource "aws_cloudwatch_event_rule" "main" {
-    name = "every-five-minutes"
-    description = "Fires every five minutes"
-    schedule_expression = "rate(5 minutes)"
+  name                = "every-five-minutes"
+  description         = "Fires every five minutes"
+  schedule_expression = "rate(5 minutes)"
 }
 
 resource "aws_cloudwatch_event_target" "main" {
-    rule = "${aws_cloudwatch_event_rule.main.name}"
-    target_id = "lambda_indexer_function"
-    arn = "${aws_lambda_function.main.arn}"
+  rule      = aws_cloudwatch_event_rule.main.name
+  target_id = "lambda_indexer_function"
+  arn       = aws_lambda_function.main.arn
 }
 
 resource "aws_lambda_permission" "main" {
-    statement_id = "AllowExecutionFromCloudWatch"
-    action = "lambda:InvokeFunction"
-    function_name = "${aws_lambda_function.main.function_name}"
-    principal = "events.amazonaws.com"
-    source_arn = "${aws_cloudwatch_event_rule.main.arn}"
+  statement_id  = "AllowExecutionFromCloudWatch"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.main.function_name
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.main.arn
 }
