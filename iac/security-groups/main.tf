@@ -45,7 +45,7 @@ resource "aws_security_group" "ecs_tasks" {
   }
 
   ingress {
-    description = "Allow NFS traffic"
+    description      = "Allow NFS traffic"
     protocol         = "tcp"
     from_port        = 2049
     to_port          = 2049
