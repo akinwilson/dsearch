@@ -38,70 +38,12 @@ Infrastructure as code using terraform as the infrastructure as code tool and AW
 
 ## Workload to do:
 <br>
-- The github action plan for the building on the indexer container needs to be created
+**NOT IN ORDER OF IMPORTANCE**
 <br>
-- The search engine container needs to be configured to have access to the EFS (network file system service of AWS)
-
-
-
-## Indexer
-Indexer image: 
-run from root dir
-<br>
-(_dockerfile contains layers necessary for non-standard python imports to be importable at runtime_)
-<br>
-__There is definitely as less convoluted way to run this so please let me know how__
-<br>
-`docker build ./ -f ./dockerfile.lambdaIndexer -t lambda-indexer:latest`
-<br>
-`docker run lambda-indexer:latest`
-<br>
-_from another terminal_
-<br>
-`docker exec -it $(docker ps --format "{{.Names}}") /bin/bash`
-this gets you inside the container 
-<br>
-`python` 
-<br>
-`from indexer import hanlder`
-`hander("","")`
-<br>
-_This will trigger the indexer_
-__NOTE__:
-<br>
-Indexing is being artifically-slowed down; note this slow really, pre the indexer.py
-<br>
-once finished running
-<br>
-`exit()`
-<br>
-`cd mnt/efs && ls`
-<br>
-here are all the indexer files required. 
-<br>
-From outside docker container run:
-<br>
-This action below should not have to be taken, and instead be redundant via the fact the efs is mounted 
-<br>
-`docker cp $(docker ps --format "{{.Names}}"):/var/task/mnt/efs ./mnt/`
-<br>
-This copies the files from within the container to your local dir tree 
-
-# Serving Search Engine
-Once the indexing files have been generated, build the search-engine serving image
-
-`docker build ./ -f ./dockerfile.searchEngine -t search-engine:latest`
-<br>
-initialise the engine
-
-`docker run -p 10000:7700 search-engine:latest`
-
-look at the command line output and see where the server listen. Change the port number to the one above
-I.e. visit the webpage:
-__http://0.0.0.0:10000__
-enter the API key, you can find it in the dockerfile (MEILI_MASTER_KEY=_CBDdMT1hiwGuiTG4mWaXA), and in the command line too.
-You'll be asked to enter this when you go to visit the webpage. 
-
-
-
+- factor out secrets for dockerfiles (enviornment should be determined via terrafrom environment. Currently inside of dockerfile not linked to terrafrom var.env. 
+- dynamically create ecr repo string inside `/iac/ecs/variables.tf`
+- remove sample data from dockerfile.indexerLambda. Fetch data instead at runtime 
+- Create TSL certificates for https and use for ALB listener `iac/alb/main.tf`
+- Configure pushing to ecr to occur after ifra deployment. Very slow using `app/push-to-ecr.sh` during `terraform apply`. Should be part of different pipeline. Only during the initial infra deployment should the images be pushed. Right now, building performed locally and requires aws account details within `.aws/credentials` to be present
+- `app/indexer.py` should use chunking when loading data into memory. Currenlty loads entire dataset to be indexed.
 <br>
