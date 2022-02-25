@@ -10,7 +10,7 @@ REPO="${SERVICE}-${COMPONENT}-${ENV}"
 ACCOUNT="437996125465"
 REGION="eu-west-2"
 
-docker build -f ../app/${IMAGE} -t ${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com/${REPO} .
+docker build -f ../app/${IMAGE} -t ${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com/${REPO} ../app
 aws ecr get-login-password \
     --region ${REGION} \
 | docker login \
