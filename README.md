@@ -37,9 +37,7 @@ Infrastructure as code using terraform as the infrastructure as code tool and AW
 
 
 ## Workload to do:
-<br>
 **NOT IN ORDER OF IMPORTANCE**
-<br>
 - factor out secrets for dockerfiles (enviornment should be determined via terrafrom environment. Currently inside of dockerfile not linked to terrafrom var.env. 
 - dynamically create ecr repo string inside `/iac/ecs/variables.tf`
 - remove sample data from dockerfile.indexerLambda. Fetch data instead at runtime 
