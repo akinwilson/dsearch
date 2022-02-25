@@ -16,5 +16,5 @@ variable "container_port" {
 
 variable "lambda_port" {
   description = "Ingress and egress port for lambda"
-  default = 9003
+  default     = 9003
 }

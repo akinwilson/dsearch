@@ -15,7 +15,7 @@ resource "aws_lb" "main" {
 
 resource "aws_alb_target_group" "main" {
   name        = "${var.name}-tg-${var.environment}"
-  port        = 80
+  port        = 7700
   protocol    = "HTTP"
   vpc_id      = var.vpc_id
   target_type = "ip"
@@ -43,22 +43,8 @@ resource "aws_alb_listener" "http" {
   protocol          = "HTTP"
   default_action {
     target_group_arn = aws_alb_target_group.main.id
-    type = "forward"
-    }
-}
-
- 
-# Redirect traffic to target group
-resource "aws_alb_listener" "https" {
-    load_balancer_arn = aws_lb.main.id
-    port              = 443
-    protocol          = "HTTPS"
-    # ssl_policy        = "ELBSecurityPolicy-2016-08"
-    # certificate_arn   = var.alb_tls_cert_arn
-    default_action {
-        target_group_arn = aws_alb_target_group.main.id
-        type             = "forward"
-    }
+    type             = "forward"
+  }
 }
 
 output "aws_alb_target_group_arn" {

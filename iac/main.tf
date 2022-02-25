@@ -43,6 +43,16 @@ module "vpc" {
   environment        = var.environment
 }
 
+module "ec2" {
+  source      = "./ec2"
+  name        = var.name
+  environment = var.environment
+  vpc_id      = module.vpc.id
+  subnet_id   = module.vpc.public_subnets.1.id
+  sg          = module.security_groups.ec2
+  fs_id       = module.efs.fs.id
+}
+
 module "security_groups" {
   source         = "./security-groups"
   name           = var.name
@@ -74,7 +84,7 @@ module "efs" {
   environment = var.environment
   vpc_id      = module.vpc.id
   subnets     = module.vpc.private_subnets
-  sg_efs      = module.security_groups.efs
+  sg          = [module.security_groups.efs, module.security_groups.ec2]
 }
 
 
@@ -97,25 +107,22 @@ module "ecs" {
     { name = "PORT",
     value = var.container_port }
   ]
-  # container_secrets      = module.secrets.secrets_map
   aws_ecr_retriever_repo_url = module.ecr.aws_ecr_retriever_repo_url
-  # container_secrets_arns = module.secrets.application_secrets_arn
-  fs_id               = module.efs.fs_id
-  efs_access_point_id = module.efs.access_point_id
+  fs                         = module.efs.fs 
+  ap        = module.efs.ap
 }
 
 
 module "lambda" {
-  source      = "./lambda"
-  name        = var.name
-  environment = var.environment
-  # indexer_image_repo = module.ecr.aws_ecr_indexer_repo_url
-  # container_port = var.container_port
-  subnets                 = var.private_subnets
-  efs_mount_path          = "/mnt/efs"
-  access_point_lambda_arn = module.efs.access_point_lambda_arn
-  dependency_on_mnt       = module.efs.depdency_on_mnt
-  sg_lambda_efs           = module.security_groups.efs
+  source            = "./lambda"
+  name              = var.name
+  environment       = var.environment
+  subnets           = [module.vpc.private_subnets.1.id, module.vpc.private_subnets.2.id]
+  efs_mount_path    = "/mnt/efs"
+  access_point      = module.efs.access_point
+  dependency_on_mnt = module.efs.depdency_on_mnt
+  dependency_on_ecr = module.ecr.dependency_on_ecr
+  sg                = module.security_groups.lambda
 }
 
 

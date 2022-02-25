@@ -1,6 +1,6 @@
 variable "name" {
   description = "Name of stack module"
- 
+
 }
 variable "environment" {
   description = "the name of your environment, e.g. \"prod\""
@@ -32,7 +32,7 @@ variable "container_memory" {
 
 variable "retriever_container_repo" {
   description = "name of container within repo"
-  default= "437996125465.dkr.ecr.eu-west-2.amazonaws.com"
+  default     = "437996125465.dkr.ecr.eu-west-2.amazonaws.com"
 }
 
 variable "aws_alb_target_group_arn" {
@@ -45,7 +45,7 @@ variable "service_desired_count" {
 
 variable "container_environment" {
   description = "The container environmnent variables"
-  type        = list
+  type        = list(any)
 }
 
 # variable "container_secrets" {
@@ -59,17 +59,17 @@ variable "container_environment" {
 
 variable "aws_ecr_retriever_repo_url" {
   description = "URL of the repostory container the image to be served over ECS"
-  default="437996125465.dkr.ecr.eu-west-2.amazonaws.com/e2e-search-retriever-prod:latest"
+  default     = "437996125465.dkr.ecr.eu-west-2.amazonaws.com/e2e-search-retriever-prod:latest"
 }
 
 
 
-variable "fs_id" {
+variable "fs" {
   description = "File system ID to use as mounting point when serving container"
 }
 
 
-variable "efs_access_point_id" {
-  description = "File system ID to use as mounting point when serving container"
+variable "ap" {
+  description = "access point"
 }
 

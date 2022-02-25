@@ -1,62 +1,54 @@
 resource "aws_iam_role" "ecs_task_execution_role" {
   name = "${var.name}-ecsTaskExecutionRole"
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "ecs-tasks.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
+  assume_role_policy = jsonencode({
+  Version = "2012-10-17",
+  Statement = [{
+      Effect = "Allow"
+      Sid = ""
+      Action = "sts:AssumeRole"
+      Principal = {
+        Service = "ecs-tasks.amazonaws.com"
+      }
+    }]
+})
 }
 
 resource "aws_iam_role" "ecs_task_role" {
   name = "${var.name}-ecsTaskRole"
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
+  assume_role_policy = jsonencode({
+  Version= "2012-10-17",
+  Statement = [
     {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "ecs-tasks.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
+      Effect = "Allow",
+      Sid = ""
+      Action = "sts:AssumeRole",
+      Principal = {
+        Service = "ecs-tasks.amazonaws.com"
+      }
     }
-  ]
-}
-EOF
+    ]})
 }
 
 resource "aws_iam_policy" "efs" {
   name        = "${var.name}-ecs-efs"
   description = "Policy that allows access EFS, mounting reading and writing"
-  policy = <<EOF
-{
-    "Version": "2012-10-17",
-    "Statement": [
+  policy      = jsonencode({
+    Version =  "2012-10-17",
+    Statement = [
         {
-            "Effect": "Allow",
-            "Action": [
+            Effect = "Allow",
+            Action = [
               "elasticfilesystem:ClientMount",
               "elasticfilesystem:ClientWrite",
               "elasticfilesystem:ClientRootAccess"
             ],
-            "Resource": "*"
+            Resource = "${var.fs.arn}"
+            Condition = { StringEquals = {"elasticfilesystem:AccessPointArn" = "${var.ap.arn}"}}
         }
     ]
-}
-EOF
+})
 }
 
 resource "aws_iam_role_policy_attachment" "ecs-task-execution-role-policy-attachment" {
@@ -89,7 +81,7 @@ resource "aws_ecs_task_definition" "main" {
   task_role_arn            = aws_iam_role.ecs_task_role.arn
   container_definitions = jsonencode([{
     name        = "${var.name}-retriever-${var.environment}"
-    image       = "${var.retriever_container_repo}/${var.name}-retriever-${var.environment}:latest" # 437996125465.dkr.ecr.eu-west-2.amazonaws.com/e2e-search-retriever-prod:latest
+    image       = "${var.retriever_container_repo}/${var.name}-retriever-${var.environment}:latest"
     essential   = true
     environment = var.container_environment
     portMappings = [{
@@ -105,17 +97,20 @@ resource "aws_ecs_task_definition" "main" {
         awslogs-region        = var.region
       }
     }
+    mountPoints = [{
+      sourceVolume  = "service-storage"
+      containerPath = "/mnt/efs"
+      readOnly = false
+    }]
   }])
-  volume {
-    name = "service-storage"
-    efs_volume_configuration {
-      file_system_id          = var.fs_id  # aws_efs_file_system.fs.id
-      transit_encryption      = "ENABLED"
-      root_directory          = "/mnt/efs"
 
+  volume {
+    name      = "service-storage"
+    efs_volume_configuration {
+      file_system_id          = var.fs.id
+      transit_encryption      = "ENABLED"
       authorization_config {
-        access_point_id = var.efs_access_point_id # aws_efs_access_point.test.id
-        iam             = "ENABLED"
+        access_point_id = var.ap.id
       }
     }
   }
@@ -152,13 +147,9 @@ resource "aws_ecs_service" "main" {
 
   load_balancer {
     target_group_arn = var.aws_alb_target_group_arn
-    container_name   = "${var.name}-container-${var.environment}"
+    container_name   = "${var.name}-retriever-${var.environment}"
     container_port   = var.container_port
   }
-
-  # we ignore task_definition changes as the revision changes on deploy
-  # of a new version of the application
-  # desired_count is ignored as it can change due to autoscaling policy
   lifecycle {
     ignore_changes = [task_definition, desired_count]
   }
@@ -166,7 +157,7 @@ resource "aws_ecs_service" "main" {
 
 resource "aws_appautoscaling_target" "ecs_target" {
   max_capacity       = 4
-  min_capacity       = 1
+  min_capacity       = 2
   resource_id        = "service/${aws_ecs_cluster.main.name}/${aws_ecs_service.main.name}"
   scalable_dimension = "ecs:service:DesiredCount"
   service_namespace  = "ecs"

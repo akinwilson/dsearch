@@ -5,14 +5,19 @@ resource "aws_ecr_repository" "indexer_main" {
   image_scanning_configuration {
     scan_on_push = false
   }
+  provisioner "local-exec" {
+    command = "../app/push-to-ecr.sh ${var.name} ${var.environment} indexer dockerfile.lambdaIndexer"
+  }
 }
 
 resource "aws_ecr_repository" "retriever_main" {
   name                 = "${var.name}-retriever-${var.environment}"
   image_tag_mutability = "MUTABLE"
-
   image_scanning_configuration {
     scan_on_push = false
+  }
+  provisioner "local-exec" {
+    command = "../app/push-to-ecr.sh ${var.name} ${var.environment} retriever dockerfile.searchEngine"
   }
 }
 
@@ -64,3 +69,7 @@ output "aws_ecr_indexer_repo_url" {
   value = aws_ecr_repository.indexer_main.repository_url
 }
 
+output "dependency_on_ecr" {
+  value = aws_ecr_repository.indexer_main
+
+}

@@ -1,42 +1,56 @@
 
 resource "aws_iam_role" "lambda_role" {
   name = "${var.name}-lambda-role"
-   assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "lambda.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
+  assume_role_policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Action = "sts:AssumeRole"
+          Effect = "Allow"
+          Sid = "AllowLambdaExecution"
+          Principal = {
+            Service = "lambda.amazonaws.com"
+          }
+        },
+      ]
+  })
 }
 
 resource "aws_iam_policy" "efs_attachment_policy" {
   name        = "${var.name}-lambda-efs"
   description = "Policy that allows access EFS, mounting reading and writing"
-  policy = <<EOF
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": [
-              "elasticfilesystem:ClientMount",
-              "elasticfilesystem:ClientWrite",
-              "elasticfilesystem:ClientRootAccess"
-            ],
-            "Resource": "*"
-        }
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "elasticfilesystem:ClientMount",
+          "elasticfilesystem:ClientWrite",
+          "elasticfilesystem:ClientRootAccess",
+        ]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "ec2:DescribeNetworkInterfaces",
+          "ec2:CreateNetworkInterface",
+          "ec2:DeleteNetworkInterface",
+          "ec2:CreateNetworkInterfacePermission",
+          "ec2:DeleteNetworkInterfacePermission",
+          "ec2:DescribeNetworkInterfacePermissions",
+          "ec2:ModifyNetworkInterfaceAttribute",
+          "ec2:DescribeNetworkInterfaceAttribute",
+          "ec2:DescribeAvailabilityZones",
+          "ec2:DescribeRegions",
+          "ec2:DescribeVpcs",
+          "ec2:DescribeSubnets",
+        ]
+        Resource = "*"
+      },
     ]
-}
-EOF
+  })
 }
 
 resource "aws_iam_role_policy_attachment" "lambda-execution-role-policy-attachment" {
@@ -47,35 +61,51 @@ resource "aws_iam_role_policy_attachment" "lambda-execution-role-policy-attachme
 
 # A lambda function connected to an EFS file system
 resource "aws_lambda_function" "main" {
-    # name        = "${var.name}-indexer-${var.environment}"
-    image_uri       = "${var.indexer_container_repo}/${var.name}-indexer-${var.environment}:latest" # 437996125465.dkr.ecr.eu-west-2.amazonaws.com/e2e-search-retriever-prod:latest
-    # image_uri = var.indexer_image_uri # 437996125465.dkr.ecr.eu-west-2.amazonaws.com/e2e-search-indexer-prod:latest
-    function_name = "lambda_indexer_function"
-    role = aws_iam_role.lambda_role.arn
-    handler = "indexer.handler"
-    runtime = "python3.8"
-    timeout = 120
-    
-    environment {
-        variables = {
-            ENVIRONMENT = var.environment 
-            HTTP_ADDR="0.0.0.0:7700"
-            MASTER_KEY = var.master_key 
-        }
+
+  image_uri     = "${var.indexer_container_repo}/${var.name}-indexer-${var.environment}:latest"
+  function_name = "lambda_indexer_function"
+  role          = aws_iam_role.lambda_role.arn
+  timeout       = 120
+  memory_size   = 1000
+  package_type  = "Image"
+
+  environment {
+    variables = {
+      ENVIRONMENT = var.environment
+      HTTP_ADDR   = "0.0.0.0:7700"
+      MASTER_KEY  = var.master_key
+    }
   }
   file_system_config {
-    # EFS file system access point ARN
-    arn = var.access_point_lambda_arn
-    # Local mount path inside the lambda function. Must start with '/mnt/'.
+    arn = var.access_point
     local_mount_path = "/mnt/efs"
   }
+
   vpc_config {
-    # Every subnet should be able to reach an EFS mount target in the same Availability Zone. Cross-AZ mounts are not permitted.
     subnet_ids         = var.subnets
-    security_group_ids = [var.sg_lambda_efs]
+    security_group_ids = [var.sg]
   }
 
-  # Explicitly declare dependency on EFS mount target.
-  # When creating or updating Lambda functions, mount target must be in 'available' lifecycle state.
-  depends_on = [var.dependency_on_mnt]
+  depends_on = [var.dependency_on_mnt, var.dependency_on_ecr]
+}
+
+
+resource "aws_cloudwatch_event_rule" "main" {
+    name = "every-five-minutes"
+    description = "Fires every five minutes"
+    schedule_expression = "rate(5 minutes)"
+}
+
+resource "aws_cloudwatch_event_target" "main" {
+    rule = "${aws_cloudwatch_event_rule.main.name}"
+    target_id = "lambda_indexer_function"
+    arn = "${aws_lambda_function.main.arn}"
+}
+
+resource "aws_lambda_permission" "main" {
+    statement_id = "AllowExecutionFromCloudWatch"
+    action = "lambda:InvokeFunction"
+    function_name = "${aws_lambda_function.main.function_name}"
+    principal = "events.amazonaws.com"
+    source_arn = "${aws_cloudwatch_event_rule.main.arn}"
 }
