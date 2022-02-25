@@ -1,0 +1,5 @@
+outs:
+- md5: 84dfa418dcd8a4f384912d9bd601aae2
+  size: 13510988
+  isexec: true
+  path: user-info.p

@@ -21,7 +21,19 @@ Containnerised indexing engine
 `iac/`<br>
 Infrastructure as code using terraform as the infrastructure as code tool and AWS as the Amazon web provider
 
-
+## Workflow order
+1) Initialise backend for terraform store (AWS) s3) via the shell script
+`./utils/create-s3-tf-backend-bucket.sh`
+2) Let terraform connect to the s3 backend:
+`cd iac && terraform init`
+3) Let terraform produce a plan for the infrastructure
+`terraform plan`
+4) Apply the iac plan with:
+`terraform apply`
+5) Clean up terraform's infra:
+`terraform destroy`
+6) Clean up state store for terraform:
+`./utils/delete-s3-tf-backend-bucket.sh`
 
 
 ## Workload to do:
@@ -93,8 +105,3 @@ You'll be asked to enter this when you go to visit the webpage.
 
 
 <br>
-
-
-
-
-

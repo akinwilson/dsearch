@@ -1,0 +1,42 @@
+FROM amazonlinux:latest
+#######################################################################################
+# Environment setup for Meili variables.
+#######################################################################################
+ARG ENVIRONMENT="development" \
+    HTTP_ADDR="0.0.0.0:7700" \
+    MASTER_KEY="_CBDdMT1hiwGuiTG4mWaXA"
+#######################################################################################
+# Environment setup for Meili variables.
+#######################################################################################
+ENV PATH=/usr/local/bin:$PATH \
+    MEILI_ENV=$ENVIRONMENT \
+    MEILI_HTTP_ADDR=$HTTP_ADDR \
+    MEILI_NO_ANALYTICS="false" \
+    MEILI_MASTER_KEY=$MASTER_KEY \
+    MEILI_DB_PATH="/mnt/efs"
+
+# update system manager and install additional dependencies
+RUN yum update -y
+RUN yum install git -y
+RUN yum install yum-utils -y
+RUN yum-config-manager && yum update -y && yum -y install shadow-utils.x86_64 xmlstarlet saxon augeas bsdtar unzip && yum clean all
+# get engine
+RUN curl -L https://github.com/meilisearch/meilisearch/releases/download/v0.22.0/meilisearch-linux-amd64 -o meilisearch
+RUN chmod +x ./meilisearch
+RUN mv ./meilisearch /usr/bin/meilisearch
+# change ow,er and group
+RUN /usr/sbin/groupadd -g 333 appgroup
+RUN /usr/sbin/useradd  -u 10010 -g appgroup appuser
+# create dir for mounting
+RUN mkdir -p /mnt/efs
+# change ownership of mounting directory
+RUN chown -R appuser:appgroup /mnt/efs
+# expose ports
+EXPOSE 7700/tcp
+EXPOSE 2049/tcp
+EXPOSE 111/tcp
+# specify directory to treat as volumn
+VOLUME /mnt/efs
+USER appuser
+# entry to start engine
+CMD ["/bin/sh", "-c", "/usr/bin/meilisearch"]
