@@ -107,5 +107,22 @@ RUN chmod +x ./meilisearch
 RUN mv ./meilisearch /usr/bin/meilisearch
 
 EXPOSE 7700/tcp
+EXPOSE 2049/tcp
+EXPOSE 111/tcp
+
+
+RUN yum install yum-utils -y
+RUN yum-config-manager && yum update -y && yum -y install shadow-utils.x86_64 xmlstarlet saxon augeas bsdtar unzip && yum clean all
+
+RUN /usr/sbin/groupadd -g 333 appgroup
+RUN /usr/sbin/useradd  -u 10010 -g appgroup appuser
+
+
+RUN mkdir -p /mnt/efs
+RUN chown -R appuser:appgroup /mnt/efs
+VOLUME /mnt/efs
+
+USER appuser
+
 CMD ["indexer.handler"]
 
