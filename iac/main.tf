@@ -108,8 +108,8 @@ module "ecs" {
     value = var.container_port }
   ]
   aws_ecr_retriever_repo_url = module.ecr.aws_ecr_retriever_repo_url
-  fs                         = module.efs.fs 
-  ap        = module.efs.ap
+  fs                         = module.efs.fs
+  ap                         = module.efs.ap
 }
 
 

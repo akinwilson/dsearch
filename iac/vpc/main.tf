@@ -121,16 +121,16 @@ resource "aws_iam_role" "vpc-flow-logs-role" {
   name = "${var.name}-vpc-flow-logs-role"
 
   assume_role_policy = jsonencode({
-  Version = "2012-10-17",
-  Statement = [{
-      Sid = "",
+    Version = "2012-10-17",
+    Statement = [{
+      Sid    = "",
       Effect = "Allow",
       Action = "sts:AssumeRole",
       Principal = {
         Service = "vpc-flow-logs.amazonaws.com"
       }
     }]
-})
+  })
 }
 
 resource "aws_iam_role_policy" "vpc-flow-logs-policy" {
@@ -138,20 +138,20 @@ resource "aws_iam_role_policy" "vpc-flow-logs-policy" {
   role = aws_iam_role.vpc-flow-logs-role.id
 
   policy = jsonencode({
-  Version = "2012-10-17",
-  Statement = [
-    {
-      Action = [
-        "logs:CreateLogGroup",
-        "logs:CreateLogStream",
-        "logs:PutLogEvents",
-        "logs:DescribeLogGroups",
-        "logs:DescribeLogStreams"
-      ],
-      Effect = "Allow",
-      Resource =  "*"
-    }
-  ]})
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+          "logs:DescribeLogGroups",
+          "logs:DescribeLogStreams"
+        ],
+        Effect   = "Allow",
+        Resource = "*"
+      }
+  ] })
 }
 
 output "id" {

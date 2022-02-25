@@ -2,53 +2,53 @@ resource "aws_iam_role" "ecs_task_execution_role" {
   name = "${var.name}-ecsTaskExecutionRole"
 
   assume_role_policy = jsonencode({
-  Version = "2012-10-17",
-  Statement = [{
+    Version = "2012-10-17",
+    Statement = [{
       Effect = "Allow"
-      Sid = ""
+      Sid    = ""
       Action = "sts:AssumeRole"
       Principal = {
         Service = "ecs-tasks.amazonaws.com"
       }
     }]
-})
+  })
 }
 
 resource "aws_iam_role" "ecs_task_role" {
   name = "${var.name}-ecsTaskRole"
 
   assume_role_policy = jsonencode({
-  Version= "2012-10-17",
-  Statement = [
-    {
-      Effect = "Allow",
-      Sid = ""
-      Action = "sts:AssumeRole",
-      Principal = {
-        Service = "ecs-tasks.amazonaws.com"
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Sid    = ""
+        Action = "sts:AssumeRole",
+        Principal = {
+          Service = "ecs-tasks.amazonaws.com"
+        }
       }
-    }
-    ]})
+  ] })
 }
 
 resource "aws_iam_policy" "efs" {
   name        = "${var.name}-ecs-efs"
   description = "Policy that allows access EFS, mounting reading and writing"
-  policy      = jsonencode({
-    Version =  "2012-10-17",
+  policy = jsonencode({
+    Version = "2012-10-17",
     Statement = [
-        {
-            Effect = "Allow",
-            Action = [
-              "elasticfilesystem:ClientMount",
-              "elasticfilesystem:ClientWrite",
-              "elasticfilesystem:ClientRootAccess"
-            ],
-            Resource = "${var.fs.arn}"
-            Condition = { StringEquals = {"elasticfilesystem:AccessPointArn" = "${var.ap.arn}"}}
-        }
+      {
+        Effect = "Allow",
+        Action = [
+          "elasticfilesystem:ClientMount",
+          "elasticfilesystem:ClientWrite",
+          "elasticfilesystem:ClientRootAccess"
+        ],
+        Resource  = "${var.fs.arn}"
+        Condition = { StringEquals = { "elasticfilesystem:AccessPointArn" = "${var.ap.arn}" } }
+      }
     ]
-})
+  })
 }
 
 resource "aws_iam_role_policy_attachment" "ecs-task-execution-role-policy-attachment" {
@@ -100,15 +100,15 @@ resource "aws_ecs_task_definition" "main" {
     mountPoints = [{
       sourceVolume  = "service-storage"
       containerPath = "/mnt/efs"
-      readOnly = false
+      readOnly      = false
     }]
   }])
 
   volume {
-    name      = "service-storage"
+    name = "service-storage"
     efs_volume_configuration {
-      file_system_id          = var.fs.id
-      transit_encryption      = "ENABLED"
+      file_system_id     = var.fs.id
+      transit_encryption = "ENABLED"
       authorization_config {
         access_point_id = var.ap.id
       }
