@@ -32,4 +32,3 @@ The system architecture is shown above. **Note**: a search engine is clearly usu
 - Create TSL certificates for https and use for ALB listener `iac/alb/main.tf`
 - Configure pushing to ecr to occur after ifra deployment. Very slow using `app/push-to-ecr.sh` during `terraform apply`. Should be part of different pipeline. Only during the initial infra deployment should the images be pushed. Right now, building performed locally and requires aws account details within `.aws/credentials` to be present
 - `app/indexer.py` should use chunking when loading data into memory. Currenlty loads entire dataset to be indexed.
-<br>
