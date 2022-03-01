@@ -1,14 +1,7 @@
 # **End-to-end lightning search** 
 
 ## Architecture overview:
-<br>
-
-Lambda function
-
-Elastic Container Service
-
-Elastic File System  
-
+![](media/searchArchitecture.png "MLFlow configuration")
 
 
 
