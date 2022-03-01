@@ -2,19 +2,14 @@
 
 ## Architecture overview:
 ![](media/searchArchitecture.png "MLFlow configuration")
-
+The system architecture is shown above. **Note**: a search engine is clearly usually an internal tool, hookup to some frontend component through an API call.  The architecture  describe above  is not directly a production setup, since there is usually no internet gateway to search via. This has been configured for demonstration purposes 
 
 
 ## Repo Structure
-`app/` <br>
-Containerised search engine
-<br>
-Containnerised indexing engine
-<br>
-`iac/`<br>
-Infrastructure as code using terraform as the infrastructure as code tool and AWS as the Amazon web provider
+`app/` contains relevant docker files
+`iac/` Infrastructure as code using terraform and AWS.
 
-## Workflow order
+# # Workflow order
 1) Initialise backend for terraform store (AWS) s3) via the shell script
 `./utils/create-s3-tf-backend-bucket.sh`
 2) Let terraform connect to the s3 backend:
