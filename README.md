@@ -1,6 +1,6 @@
 # **dsearch** 
 ## Overview 
-dsearch, standing for remotely deployed search engine, a repository containing the infrastructure as code and application code to host a [lightning-speed search egine](https://www.meilisearch.com/) on AWS.
+dsearch, standing for remotely **d**eployed search engine, is a repository containing the infrastructure as code and application code to host a [lightning-speed search egine](https://www.meilisearch.com/) on AWS.
 
 ## system:
 ![](media/searchArchitecture.png "MLFlow configuration")
