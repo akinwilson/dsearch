@@ -1,6 +1,8 @@
-# **End-to-end lightning search** 
+# **dsearch** 
+## Overview 
+dsearch, standing for remotely deployed search engine, a repository containing the infrastructure as code and application code to host a [lightning-speed search egine](https://www.meilisearch.com/) on AWS.
 
-## Architecture overview:
+## system:
 ![](media/searchArchitecture.png "MLFlow configuration")
 The system architecture is shown above. **Note**: a search engine is clearly usually an internal tool, hookup to some frontend component through an API call.  The architecture  describe above  is not directly a production setup, since there is usually no internet gateway to search via. This has been configured for demonstration purposes 
 
